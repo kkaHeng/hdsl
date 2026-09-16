@@ -4,6 +4,8 @@
 
 [![](https://jitpack.io/v/kkaHeng/hdsl.svg)](https://jitpack.io/#kkaHeng/hdsl)
 
+中文 | [英文](README.en.md)
+
 ---
 
 用 **Java 代码**构建 Android UI 的 DSL 框架。零 XML、链式 API、类型安全，布局结构直接从代码里长出来。
