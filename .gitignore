@@ -1,0 +1,14 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore ACS editor directory
+.acside
+
+# Ignore Kotlin directory
+.kotlin
+
+# Ignore Gradle build output directory
+build
+
+# Agent 工具备份（对话状态、对象存储等临时数据）
+.backup/

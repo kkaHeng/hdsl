@@ -1,0 +1,38 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.ahheng.hdsl.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.ahheng.hdsl.app'
+        minSdk 23
+        targetSdk 34
+        versionName project.findProperty('version.name')
+        versionCode project.findProperty('version.code').toInteger()
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            applicationIdSuffix '.release'
+            versionNameSuffix '-release'
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation libs.androidx.appcompat
+    implementation libs.material
+
+    implementation project(":hdsl")
+}

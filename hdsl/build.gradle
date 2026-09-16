@@ -1,0 +1,50 @@
+plugins {
+    alias(libs.plugins.android.library)
+    id 'maven-publish'
+}
+
+android {
+    namespace 'com.ahheng.hdsl'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 21
+        versionName project.findProperty('version.name')
+    }
+
+    buildTypes {
+        release {
+            consumerProguardFiles 'consumer-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+dependencies {
+
+}
+
+group = 'com.github.kkaHeng'
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.kkaHeng'
+                artifactId = 'hdsl'
+                version = project.findProperty('version.name') ?: '26.9.1'
+            }
+        }
+    }
+}
