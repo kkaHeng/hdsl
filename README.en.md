@@ -2,6 +2,8 @@
 
 Born out of the narrowest crack, I build my road from history.
 
+[![](https://jitpack.io/v/kkaHeng/hdsl.svg)](https://jitpack.io/#kkaHeng/hdsl)
+
 ---
 
 Build Android UIs with **Java code**. Zero XML, fluent API, type-safe — the layout tree grows directly out of your code.

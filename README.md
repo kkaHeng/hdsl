@@ -2,6 +2,8 @@
 
 从狭缝中诞生，以历史筑道途。
 
+[![](https://jitpack.io/v/kkaHeng/hdsl.svg)](https://jitpack.io/#kkaHeng/hdsl)
+
 ---
 
 用 **Java 代码**构建 Android UI 的 DSL 框架。零 XML、链式 API、类型安全，布局结构直接从代码里长出来。
