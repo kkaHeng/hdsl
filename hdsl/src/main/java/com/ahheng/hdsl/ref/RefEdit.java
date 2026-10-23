@@ -1,16 +1,16 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.text.InputFilter;
 import android.text.method.DigitsKeyListener;
 import android.widget.EditText;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefText;
 
-// 输入框工具
-public class EditTextTool<V extends EditText, T extends EditTextTool<V, T>>
-        extends TextViewTool<V, T> {
+// 输入框引用
+public class RefEdit<V extends EditText, T extends RefEdit<V, T>>
+        extends RefText<V, T> {
 
-    public EditTextTool(V view) {
+    public RefEdit(V view) {
         super(view);
     }
 

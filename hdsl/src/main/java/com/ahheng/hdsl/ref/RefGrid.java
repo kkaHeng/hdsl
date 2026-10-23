@@ -1,14 +1,14 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.widget.GridLayout;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefLayout;
 
-// 网格布局工具
-public class GridLayoutTool<V extends GridLayout, T extends GridLayoutTool<V, T>>
-        extends ViewTool<V, T> {
+// 网格布局引用
+public class RefGrid<V extends GridLayout, T extends RefGrid<V, T>>
+        extends RefLayout<V, T> {
 
-    public GridLayoutTool(V view) {
+    public RefGrid(V view) {
         super(view);
     }
 

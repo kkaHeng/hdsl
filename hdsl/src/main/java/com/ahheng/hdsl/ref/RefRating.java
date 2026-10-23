@@ -1,14 +1,14 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.widget.RatingBar;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefProgress;
 
-// 评分条工具
-public class RatingBarTool<V extends RatingBar, T extends RatingBarTool<V, T>>
-        extends ProgressBarTool<V, T> {
+// 评分条引用
+public class RefRating<V extends RatingBar, T extends RefRating<V, T>>
+        extends RefProgress<V, T> {
 
-    public RatingBarTool(V view) {
+    public RefRating(V view) {
         super(view);
     }
 

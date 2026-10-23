@@ -1,15 +1,15 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.content.res.ColorStateList;
 import android.widget.Switch;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefCheck;
 
-// 开关工具
-public class SwitchTool<V extends Switch, T extends SwitchTool<V, T>>
-        extends CompoundButtonTool<V, T> {
+// 开关引用
+public class RefSwitch<V extends Switch, T extends RefSwitch<V, T>>
+        extends RefCheck<V, T> {
 
-    public SwitchTool(V view) {
+    public RefSwitch(V view) {
         super(view);
     }
 

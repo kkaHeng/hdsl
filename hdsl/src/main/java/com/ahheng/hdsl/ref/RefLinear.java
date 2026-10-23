@@ -1,14 +1,14 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.widget.LinearLayout;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefLayout;
 
-// 线性布局工具
-public class LinearLayoutTool <V extends LinearLayout, T extends LinearLayoutTool<V, T>>
-        extends ViewTool<V, T> {
+// 线性布局引用
+public class RefLinear <V extends LinearLayout, T extends RefLinear<V, T>>
+        extends RefLayout<V, T> {
 
-    public LinearLayoutTool(V view) {
+    public RefLinear(V view) {
         super(view);
     }
 

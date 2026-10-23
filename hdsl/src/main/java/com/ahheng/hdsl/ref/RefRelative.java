@@ -1,14 +1,14 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.widget.RelativeLayout;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefLayout;
 
-// 相对布局工具
-public class RelativeLayoutTool<V extends RelativeLayout, T extends RelativeLayoutTool<V, T>>
-        extends ViewTool<V, T> {
+// 相对布局引用
+public class RefRelative<V extends RelativeLayout, T extends RefRelative<V, T>>
+        extends RefLayout<V, T> {
 
-    public RelativeLayoutTool(V view) {
+    public RefRelative(V view) {
         super(view);
     }
 

@@ -1,16 +1,16 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.widget.ProgressBar;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefView;
 
-// 进度条工具
-public class ProgressBarTool<V extends ProgressBar, T extends ProgressBarTool<V, T>>
-        extends ViewTool<V, T> {
+// 进度条引用
+public class RefProgress<V extends ProgressBar, T extends RefProgress<V, T>>
+        extends RefView<V, T> {
 
-    public ProgressBarTool(V view) {
+    public RefProgress(V view) {
         super(view);
     }
 

@@ -1,14 +1,14 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.widget.FrameLayout;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefLayout;
 
-// 帧布局工具
-public class FrameLayoutTool<V extends FrameLayout, T extends FrameLayoutTool<V, T>>
-        extends ViewTool<V, T> {
+// 帧布局引用
+public class RefFrame<V extends FrameLayout, T extends RefFrame<V, T>>
+        extends RefLayout<V, T> {
 
-    public FrameLayoutTool(V view) {
+    public RefFrame(V view) {
         super(view);
     }
 

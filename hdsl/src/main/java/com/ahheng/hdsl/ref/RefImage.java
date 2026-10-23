@@ -1,16 +1,16 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefView;
 
-// 图片工具
-public class ImageViewTool<V extends ImageView, T extends ImageViewTool<V, T>>
-        extends ViewTool<V, T> {
+// 图片引用
+public class RefImage<V extends ImageView, T extends RefImage<V, T>>
+        extends RefView<V, T> {
 
-    public ImageViewTool(V view) {
+    public RefImage(V view) {
         super(view);
     }
 

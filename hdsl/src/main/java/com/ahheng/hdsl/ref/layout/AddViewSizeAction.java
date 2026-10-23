@@ -5,8 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.ahheng.hdsl.CtxProvider;
-import com.ahheng.hdsl.Factory;
 import com.ahheng.hdsl.ReturnMe;
+import com.ahheng.hdsl.md.Element;
 import com.ahheng.hdsl.md.Method;
 import com.ahheng.hdsl.ref.RefLayout;
 import com.ahheng.hdsl.ref.RefView;
@@ -16,15 +16,26 @@ import java.util.Objects;
 
 // 添加控件操作。尺寸版
 // 组合：
-// addView(View, int, int, Method?)
-// addView(Class, int, int, Method?)
-// addView(Creator, int, int, Method?)
+// addView(Element, int, int)
+// addView(View, int, int)
+// addView(View, int, int, Method)
+// addView(Class, int, int)
+// addView(Class, int, int, Method)
 public interface AddViewSizeAction <V extends ViewGroup, T extends AddViewSizeAction<V, T>>
         extends Reference<V>, ReturnMe<V, T>, CtxProvider {
 
     // 添加一个控件
     default T view(View view, int width, int height) {
         ref().addView(view, width, height);
+        return me();
+    }
+
+    // 添加一个控件，并且配置属性
+    default <R extends View> T view(R view, int width, int height, Method<RefView<R, ?>> method) {
+        Objects.requireNonNull(view, "无法给空气配置属性");
+        Objects.requireNonNull(method, "无法执行空气");
+        ref().addView(view, width, height);
+        method.call(new RefView<>(view));
         return me();
     }
 
@@ -39,8 +50,9 @@ public interface AddViewSizeAction <V extends ViewGroup, T extends AddViewSizeAc
     }
 
     // 创建添加一个控件，并且配置属性
-    default <R extends View> T view(Class<R> clazz, int width, int height, Method<RefView<R,?>> method) {
+    default <R extends View> T view(Class<R> clazz, int width, int height, Method<RefView<R, ?>> method) {
         Objects.requireNonNull(clazz, "无法利用空气创建控件");
+        Objects.requireNonNull(method, "无法执行空气");
         try {
             return view(clazz.getConstructor(Context.class).newInstance(ctx()), width, height, method);
         } catch(Exception e) {
@@ -48,31 +60,27 @@ public interface AddViewSizeAction <V extends ViewGroup, T extends AddViewSizeAc
         }
     }
 
-    // 创建添加一个控件
-    default <R extends View> T view(Factory.Creator<R> creator, int width, int height) {
-        Objects.requireNonNull(creator, "无法利用空气创建控件");
-        return view(creator.create(ctx()), width, height);
-    }
-
-    // 创建添加一个控件，并且配置属性
-    default <R extends View> T view(Factory.Creator<R> creator, int width, int height, Method<RefView<R,?>> method) {
-        Objects.requireNonNull(creator, "无法利用空气创建控件");
-        Objects.requireNonNull(method, "无法执行空气");
-        return view(creator.create(ctx()), width, height, method);
-    }
-
-    // 添加一个控件，并且配置属性
-    default <R extends View> T view(R view, int width, int height, Method<RefView<R,?>> method) {
-        Objects.requireNonNull(view, "无法给空气配置属性");
-        Objects.requireNonNull(method, "无法执行空气");
+    // 构建添加一个控件
+    default <R extends View> T view(Element<R> element, int width, int height) {
+        Objects.requireNonNull(element, "无法利用空气创建控件");
+        R view = element.create(ctx());
         ref().addView(view, width, height);
-        method.call(new RefView<>(view));
+        element.configure(view);
         return me();
     }
 
     // 添加一个布局
-    default T layout(ViewGroup view, int width, int height) {
-        ref().addView(view, width, height);
+    default T layout(ViewGroup layout, int width, int height) {
+        ref().addView(layout, width, height);
+        return me();
+    }
+
+    // 添加一个布局，并且配置属性
+    default <R extends ViewGroup> T layout(R layout, int width, int height, Method<RefLayout<R, ?>> method) {
+        Objects.requireNonNull(layout, "无法给空气配置属性");
+        Objects.requireNonNull(method, "无法执行空气");
+        ref().addView(layout, width, height);
+        method.call(new RefLayout<>(layout));
         return me();
     }
 
@@ -87,8 +95,9 @@ public interface AddViewSizeAction <V extends ViewGroup, T extends AddViewSizeAc
     }
 
     // 创建添加一个布局，并且配置属性
-    default <R extends ViewGroup> T layout(Class<R> clazz, int width, int height, Method<RefLayout<R,?>> method) {
+    default <R extends ViewGroup> T layout(Class<R> clazz, int width, int height, Method<RefLayout<R, ?>> method) {
         Objects.requireNonNull(clazz, "无法利用空气创建控件");
+        Objects.requireNonNull(method, "无法执行空气");
         try {
             return layout(clazz.getConstructor(Context.class).newInstance(ctx()), width, height, method);
         } catch(Exception e) {
@@ -96,25 +105,12 @@ public interface AddViewSizeAction <V extends ViewGroup, T extends AddViewSizeAc
         }
     }
 
-    // 创建添加一个布局
-    default <R extends ViewGroup> T layout(Factory.Creator<R> creator, int width, int height) {
-        Objects.requireNonNull(creator, "无法利用空气创建控件");
-        return layout(creator.create(ctx()), width, height);
-    }
-
-    // 创建添加一个布局，并且配置属性
-    default <R extends ViewGroup> T layout(Factory.Creator<R> creator, int width, int height, Method<RefLayout<R,?>> method) {
-        Objects.requireNonNull(creator, "无法利用空气创建控件");
-        Objects.requireNonNull(method, "无法执行空气");
-        return layout(creator.create(ctx()), width, height, method);
-    }
-
-    // 添加一个布局，并且配置属性
-    default <R extends ViewGroup> T layout(R view, int width, int height, Method<RefLayout<R,?>> method) {
-        Objects.requireNonNull(view, "无法给空气配置属性");
-        Objects.requireNonNull(method, "无法执行空气");
-        ref().addView(view, width, height);
-        method.call(new RefLayout<>(view));
+    // 构建添加一个布局
+    default <R extends ViewGroup> T layout(Element<R> element, int width, int height) {
+        Objects.requireNonNull(element, "无法利用空气创建控件");
+        R layout = element.create(ctx());
+        ref().addView(layout, width, height);
+        element.configure(layout);
         return me();
     }
 

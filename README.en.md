@@ -4,7 +4,7 @@ Born out of the narrowest crack, I build my road from history.
 
 [![](https://jitpack.io/v/kkaHeng/hdsl.svg)](https://jitpack.io/#kkaHeng/hdsl)
 
-English | [中文](README.md)
+English | [汉语](README.md)
 
 ---
 
@@ -12,161 +12,202 @@ Build Android UIs with **Java code**. Zero XML, fluent API, type-safe — the la
 
 Prerequisite: **Java 8**.
 
-> One-liner division of labor: **`build` builds structure, `Tools` configures properties, `Factory` creates widgets**.
-> Make your `Activity implements HDSL` and you get all three capabilities at once.
+---
+
+## Installation
+
+Declare the JitPack repository in **settings.gradle**:
+
+```groovy
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }   // ← add this line
+    }
+}
+```
+
+Or put it in the `allprojects` block of the root **build.gradle**:
+
+```groovy
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+Then add the dependency in your module's **build.gradle**:
+
+```groovy
+dependencies {
+    implementation 'com.github.kkaHeng:hdsl:26.9.1'
+}
+```
+
+> With Kotlin DSL (`settings.gradle.kts`) use `maven("https://jitpack.io")`.
+> The version is always shown in the badge above, or check [JitPack](https://jitpack.io/#kkaHeng/hdsl).
 
 ---
 
 ## Ways to Build a UI
 
-Every way to build with HDSL is the same recipe: **pick a layout as root → drop in child widgets/layouts → configure each node**.
-The only difference is *where the widgets come from* — there are three sources, hence three styles.
+### 1. Source methods: creation plus configuration in one go
 
-### Style 1: Instance (you `new` it)
+The method name is the widget name. The first parameter is always the configurator, and what you get inside it is that widget's reference — write properties straight onto it.
 
 ```java
+@Override
+protected void onCreate(Bundle bundle) {
+    super.onCreate(bundle);
+    setContentView(build(scroll(root -> {
+        root.size(-1, -1).fillViewport();
+
+        root.layout(linear(box -> {
+            box.paddingDp(16).vertical();
+
+            box.view(text(tv -> {
+                tv.text("Hello, world").textSizeDp(16);
+            }));
+        }));
+    })));
+}
+```
+
+Every source method accepts three kinds of origin:
+
+```java
+text(tv -> {...})                        // default constructor
+text(new TextView(this), tv -> {...})    // given instance
+text(TextView.class, tv -> {...})        // reflective construction
+```
+
+### 2. Instance and Class forms
+
+The entry point eats the same three origins. Instance / class origins only get the generic configurator: `build` and `view` hand you `RefView`, `layout` hands you `RefLayout`. For widget-specific properties, let a source method take the instance or class instead.
+
+```java
+// source method
+setContentView(build(scroll(root -> {...})));
+
+// instance + configuration
 setContentView(build(new LinearLayout(this), root -> {
-    root.view(new TextView(this), tv -> {
-        text(tv).text("Hello, World").textSizeDp(16);
-    });
+    root.paddingDp(16);
 }));
-```
 
-Create the widget instance yourself. Good for reusing an existing instance, or widgets whose constructors need arguments (e.g. `MaterialButton`, `MaterialCardView`).
+// widget-specific properties: let a source method take the instance
+setContentView(build(linear(new LinearLayout(this), root -> {
+    root.view(new TextView(this));
+})));
 
-### Style 2: Class (reflective creation)
-
-```java
+// class + configuration
 setContentView(build(LinearLayout.class, root -> {
-    root.view(TextView.class, tv -> {
-        text(tv).text("Hello, World").textSizeDp(16);
-    });
+    root.paddingDp(16);
 }));
 ```
 
-Just pass the `Class`; the framework reflects an instance. Context is handled automatically — HDSL senses it from the implementer (an Activity is itself a Context).
+### 3. Mixing, and escaping through ref()
 
-### Style 3: Creator (factory constants, the most concise)
+Mix the three origins freely. Any time, `ref()` hands you the raw View — call native APIs as you please.
 
 ```java
-setContentView(build(LINEAR, root -> {
-    root.view(TEXT, tv -> {
-        text(tv).text("Hello, World").textSizeDp(16);
-    });
+build(linear(root -> {
+    root.layout(frame(new MaterialCardView(this), card -> {
+        card.ref().setRadius(card.dp2px(16f));  // native method
+        card.elevationDp(1);                    // property on the reference
+    }));
 }));
 ```
 
-Use the **constants** in `Factory` (method references under the hood) — no `.class`, no `new`. They **only create, never configure**; configuration goes into the trailing `Method` callback. This is the idiomatic style.
-
-### Style 4: Mixing + `ref()` Escape Hatch
-
-The three sources mix freely. Whenever you need a native API, grab the raw View with `ref()`:
-
-```java
-setContentView(build(LINEAR, root -> {
-    root.layout(new MaterialCardView(this), card -> {
-        card.ref().setRadius(view(card).dp2px(16f)); // native call, escape anytime
-        view(card).elevationDp(1);
-    });
-}));
-```
-
-The framework is **build-only**. Runtime operations (remove, read values, animations…) always escape to native APIs via `ref()`.
+> Were it not for those typical statically-scanning IDEs, the generics could be written all the more elegantly.
 
 ---
 
-## Adding Child Widgets
+## Adding Children
 
-`RefLayout` aggregates all **5 `addView` overloads**, each exposing two entry points: `view(...)` (widget) and `layout(...)` (layout, infinitely nestable):
-
-| addView overload | Entry methods |
-|---|---|
-| `addView(View)` | `view(...)` / `layout(...)` |
-| `addView(View, int)` | `view(..., index)` / `layout(..., index)` |
-| `addView(View, LayoutParams)` | `view(..., params)` / `layout(..., params)` |
-| `addView(View, int, LayoutParams)` | `view(..., index, params)` / `layout(..., index, params)` |
-| `addView(View, int, int)` | `view(..., width, height)` / `layout(..., width, height)` |
-
-Each entry expands by "source × configure?":
+All 5 `addView` overloads accept three origins. The element takes the first slot, the remaining parameters match the native signature:
 
 ```java
-root.view(new TextView(this));                 // instance, no config
-root.view(new TextView(this), tv -> {...});    // instance, config
-root.view(TextView.class);                     // Class, no config
-root.view(TextView.class, tv -> {...});        // Class, config
-root.view(TEXT);                               // Creator, no config
-root.view(TEXT, tv -> {...});                  // Creator, config ← most common
+// element
+root.view(text(tv -> {...}));                      // addView(Element)
+
+// instance
+root.view(new TextView(this));                     // addView(View)
+root.view(new TextView(this), tv -> {...});        // addView(View, Method)
+
+// class
+root.view(TextView.class);                         // addView(Class)
+root.view(TextView.class, tv -> {...});            // addView(Class, Method)
+
+// extra parameters
+root.view(text(tv -> {...}), 0);                   // addView(Element, int)
+root.view(text(tv -> {...}), params);              // addView(Element, LayoutParams)
+root.view(text(tv -> {...}), 0, params);           // addView(Element, int, LayoutParams)
+root.view(text(tv -> {...}), -2, 32);              // addView(Element, int, int)
 ```
 
-Same for layouts: inside `layout(LINEAR, inner -> { ... })` you keep calling `inner.view(...)` — **nest forever**.
+Use `layout(...)` for layouts and `view(...)` for widgets; nest them without limit:
+
+```java
+root.layout(linear(box -> {
+    box.view(text(tv -> {...}));
+    box.layout(frame(f -> {
+        f.view(text(tv -> {...}), new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
+    }));
+}));
+```
 
 ---
 
 ## Configuring Properties
 
-The `Tools` factory offers per-widget property tools, all fluent and returning `this`:
+Property methods live on the reference object, chainable and self-returning:
 
 ```java
-text(tv)                                    // TextView properties
-    .text("Hello").textSizeDp(16).textColor(0xFF3D5A80)
-    .marginTopDp(8).background(R.drawable.bg).onClick(v -> {...});
+root.view(edit(e -> {
+    e.size(-1, -2).paddingDp(14, 10, 14, 10)
+     .hint("Enter a nickname").maxLength(10)
+     .inputType(InputType.TYPE_CLASS_TEXT);
+}));
+
+root.view(seek(sb -> {
+    sb.size(-1, -2).max(100).progress(50)
+      .thumbTint(getColor(R.color.md_primary))
+      .onSeekBarChange(listener);
+}));
 ```
 
-| Factory method | Widget | Factory method | Widget |
-|---|---|---|---|
-| `view(...)` | View (generic) | `progress(...)` | ProgressBar |
-| `text(...)` | TextView | `seek(...)` | SeekBar |
-| `edit(...)` | EditText | `rating(...)` | RatingBar |
-| `image(...)` | ImageView | `linear(...)` | LinearLayout |
-| `check(...)` | CompoundButton | `frame(...)` | FrameLayout |
-| `switch_button(...)` | Switch | `relative(...)` | RelativeLayout |
-| | | `scroll(...)` | ScrollView |
-| | | `grid(...)` | GridLayout |
-
-Generic properties (size/margin/padding/background/foreground/visibility/interaction/transform/elevation/alpha) live in `ViewTool`, shared down the whole tool inheritance chain; `TextViewTool` branches into `EditTextTool`, `CompoundButtonTool`, `SwitchTool`; `ProgressBarTool` branches into `SeekBarTool`, `RatingBarTool`; layout tools carry their own layout-specific properties.
-
-> Were it not for those typical statically-scanning IDEs, the generics could reach even further, and the code could be written all the more elegantly.
+Unit rules: every **length** (size / margin / padding / elevation / max width & height) comes in both `xxx()` pixels and `xxxDp()` variants; `textSize()` follows the native semantics (SP), with `textSizeDp` and `textSizePx` alongside it.
 
 ---
 
-## Code Example
+## Elements at a Glance
 
 ```java
-public class MainActivity extends AppCompatActivity implements HDSL {
+// widgets
+view  text  button  edit  image  progress  check  radio  switch_button
+space  seek  rating  spinner  chrono  web  list  grid_view  search
 
-    @Override
-    protected void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        setContentView(build(LINEAR, root -> {
-            linear(root).size(-1, -1).paddingDp(20, 48, 20, 20).vertical(); // -1=MATCH, -2=WRAP
-
-            root.view(TEXT, title -> {
-                text(title).size(-1, -2).text("HDSL").textSizeDp(34)
-                        .textColor(getColor(R.color.md_primary)).typeface(Typeface.BOLD);
-            });
-
-            root.layout(new MaterialCardView(this), card -> {
-                view(card).size(-1, -2).marginTopDp(24).elevationDp(1);
-                card.layout(LINEAR, box -> {
-                    linear(box).size(-1, -2).paddingDp(20).vertical();
-                    box.view(TEXT, t -> text(t).text("Features").textSizeDp(16).typeface(Typeface.BOLD));
-                });
-            });
-
-            root.view(new MaterialButton(this), primary -> {
-                view(primary).size(-1, -2).marginTopDp(24).onClick(v -> toast("Primary tapped"));
-                text(primary).text("Primary").textSizeDp(15);
-            });
-        }));
-    }
-}
+// layouts
+linear  frame  relative  scroll  hscroll  grid
+radio_group  table  table_row  switcher
 ```
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT License
 
 ---
 
@@ -174,7 +215,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 - Author: Ah Heng
 - Email: kkaheng163@163.com
-- GitHub: [https://github.com/kkaHeng](https://github.com/kkaHeng)
+- GitHub: https://github.com/kkaHeng
 
 ---
 

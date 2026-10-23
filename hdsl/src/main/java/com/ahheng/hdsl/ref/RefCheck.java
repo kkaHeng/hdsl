@@ -1,16 +1,16 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.widget.CompoundButton;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefText;
 
-// 复合按钮工具
-public class CompoundButtonTool<V extends CompoundButton, T extends CompoundButtonTool<V, T>>
-        extends TextViewTool<V, T> {
+// 复合按钮引用
+public class RefCheck<V extends CompoundButton, T extends RefCheck<V, T>>
+        extends RefText<V, T> {
 
-    public CompoundButtonTool(V view) {
+    public RefCheck(V view) {
         super(view);
     }
 

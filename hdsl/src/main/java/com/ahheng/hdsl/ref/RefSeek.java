@@ -1,16 +1,16 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.widget.SeekBar;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefProgress;
 
-// 拖动条工具
-public class SeekBarTool<V extends SeekBar, T extends SeekBarTool<V, T>>
-        extends ProgressBarTool<V, T> {
+// 拖动条引用
+public class RefSeek<V extends SeekBar, T extends RefSeek<V, T>>
+        extends RefProgress<V, T> {
 
-    public SeekBarTool(V view) {
+    public RefSeek(V view) {
         super(view);
     }
 

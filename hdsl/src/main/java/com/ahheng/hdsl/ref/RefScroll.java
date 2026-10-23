@@ -1,14 +1,14 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.widget.ScrollView;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefFrame;
 
-// 滚动布局工具
-public class ScrollViewTool<V extends ScrollView, T extends ScrollViewTool<V, T>>
-        extends FrameLayoutTool<V, T> {
+// 滚动布局引用
+public class RefScroll<V extends ScrollView, T extends RefScroll<V, T>>
+        extends RefFrame<V, T> {
 
-    public ScrollViewTool(V view) {
+    public RefScroll(V view) {
         super(view);
     }
 

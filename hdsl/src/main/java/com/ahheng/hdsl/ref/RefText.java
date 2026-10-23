@@ -1,4 +1,4 @@
-package com.ahheng.hdsl.tool.view;
+package com.ahheng.hdsl.ref;
 
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
@@ -6,13 +6,13 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.widget.TextView;
 
-import com.ahheng.hdsl.tool.ViewTool;
+import com.ahheng.hdsl.ref.RefView;
 
-// 文本框工具
-public class TextViewTool <V extends TextView, T extends TextViewTool<V, T>>
-        extends ViewTool<V, T> {
+// 文本框引用
+public class RefText <V extends TextView, T extends RefText<V, T>>
+        extends RefView<V, T> {
 
-    public TextViewTool(V view) {
+    public RefText(V view) {
         super(view);
     }
 
