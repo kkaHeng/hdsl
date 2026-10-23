@@ -8,7 +8,7 @@ English | [汉语](README.md)
 
 ---
 
-Build Android UIs with **Java code**. Zero XML, fluent API, type-safe — the layout tree grows directly out of your code.
+Write Android UIs with **Java code**, no XML.
 
 Prerequisite: **Java 8**.
 
@@ -16,200 +16,274 @@ Prerequisite: **Java 8**.
 
 ## Installation
 
-Declare the JitPack repository in **settings.gradle**:
+### 1. Add the repository
 
-```groovy
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+Open the project-level `settings.gradle` and add one line to `repositories`:
 
+```gradle
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }   // ← add this line
+        maven { url 'https://jitpack.io' }   // add this line
     }
 }
 ```
 
-Or put it in the `allprojects` block of the root **build.gradle**:
+### 2. Add the dependency
 
-```groovy
-allprojects {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
+**Option 1**: put the coordinates directly in your module's `build.gradle`:
 
-Then add the dependency in your module's **build.gradle**:
-
-```groovy
+```gradle
 dependencies {
-    implementation 'com.github.kkaHeng:hdsl:26.9.1'
+    implementation 'com.github.kkaHeng:hdsl:26.10.1'
 }
 ```
 
-> With Kotlin DSL (`settings.gradle.kts`) use `maven("https://jitpack.io")`.
-> The version is always shown in the badge above, or check [JitPack](https://jitpack.io/#kkaHeng/hdsl).
+**Option 2**: use the version catalog (`gradle/libs.versions.toml`) — pick one of the two.
+
+Declare it first:
+
+```toml
+[versions]
+hdsl = "26.10.1"
+
+[libraries]
+hdsl = { group = "com.github.kkaHeng", name = "hdsl", version.ref = "hdsl" }
+```
+
+Then reference it in your module's `build.gradle`:
+
+```gradle
+dependencies {
+    implementation libs.hdsl
+}
+```
+
+The latest version is shown in the badge above, or [here](https://jitpack.io/#kkaHeng/hdsl).
 
 ---
 
-## Ways to Build a UI
+## Your first screen
 
-### 1. Source methods: creation plus configuration in one go
-
-The method name is the widget name. The first parameter is always the configurator, and what you get inside it is that widget's reference — write properties straight onto it.
+Create an Activity, implement `HDSL`, and write the following in `onCreate`:
 
 ```java
-@Override
-protected void onCreate(Bundle bundle) {
-    super.onCreate(bundle);
-    setContentView(build(scroll(root -> {
-        root.size(-1, -1).fillViewport();
+public class MainActivity extends AppCompatActivity implements HDSL {
 
-        root.layout(linear(box -> {
-            box.paddingDp(16).vertical();
+    @Override
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
 
-            box.view(text(tv -> {
-                tv.text("Hello, world").textSizeDp(16);
-            }));
-        }));
-    })));
+        setContentView(build(text(tv -> {
+            tv.text("Hello, world")
+              .textSizeDp(24);
+        })));
+    }
 }
 ```
 
-Every source method accepts three kinds of origin:
+`build(...)` returns the created View, ready for `setContentView`.
+
+---
+
+## Adding several widgets
+
+Build a vertical layout with `linear(...)`, then add children to it:
 
 ```java
-text(tv -> {...})                        // default constructor
-text(new TextView(this), tv -> {...})    // given instance
-text(TextView.class, tv -> {...})        // reflective construction
-```
+setContentView(build(linear(root -> {
+    root.vertical()
+        .paddingDp(24);
 
-### 2. Instance and Class forms
+    root.view(text(tv -> {
+        tv.text("Title")
+          .textSizeDp(24);
+    }));
 
-The entry point eats the same three origins. Instance / class origins only get the generic configurator: `build` and `view` hand you `RefView`, `layout` hands you `RefLayout`. For widget-specific properties, let a source method take the instance or class instead.
-
-```java
-// source method
-setContentView(build(scroll(root -> {...})));
-
-// instance + configuration
-setContentView(build(new LinearLayout(this), root -> {
-    root.paddingDp(16);
-}));
-
-// widget-specific properties: let a source method take the instance
-setContentView(build(linear(new LinearLayout(this), root -> {
-    root.view(new TextView(this));
+    root.view(text(tv -> {
+        tv.text("A line of body text.")
+          .textSizeDp(16);
+    }));
 })));
-
-// class + configuration
-setContentView(build(LinearLayout.class, root -> {
-    root.paddingDp(16);
-}));
 ```
 
-### 3. Mixing, and escaping through ref()
+`root.view(...)` adds a widget, `root.layout(...)` adds a layout.
 
-Mix the three origins freely. Any time, `ref()` hands you the raw View — call native APIs as you please.
+---
+
+## Nesting layouts
+
+Layouts can be nested:
 
 ```java
-build(linear(root -> {
-    root.layout(frame(new MaterialCardView(this), card -> {
-        card.ref().setRadius(card.dp2px(16f));  // native method
-        card.elevationDp(1);                    // property on the reference
+root.layout(linear(row -> {
+    row.horizontal();
+
+    row.view(text(tv -> {
+        tv.text("Left");
+    }));
+
+    row.view(text(tv -> {
+        tv.text("Right");
     }));
 }));
 ```
+
+---
+
+## Setting properties
+
+Inside the configurator you get that widget's reference — write properties straight onto it:
+
+```java
+root.view(text(tv -> {
+    tv.text("Submit")
+      .textSizeDp(16)
+      .paddingDp(12, 8, 12, 8)
+      .marginTopDp(16)
+      .textColor(0xFFFFFFFF)
+      .backgroundColor(0xFF3D5A80);
+}));
+```
+
+Every length comes in pixels and DP:
+
+```java
+padding(12)      paddingDp(12)
+size(48)         sizeDp(48)
+margin(8)        marginDp(8)
+```
+
+`textSize` uses SP by default; `textSizeDp` and `textSizePx` are also available.
+
+---
+
+## Handling interaction
+
+Listeners go straight into the chain:
+
+```java
+root.view(text(tv -> {
+    tv.text("Tap me")
+      .paddingDp(12, 8, 12, 8)
+      .onClick(v -> Toast.makeText(this, "Tapped", Toast.LENGTH_SHORT).show());
+}));
+```
+
+---
+
+## Reaching the native widget
+
+When you need a native method, use `ref()`:
+
+```java
+root.view(text(tv -> {
+    tv.text("Rounded background")
+      .paddingDp(12);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFFE8F0FE);
+    bg.setCornerRadius(tv.dp2px(12)); // dp to px
+
+    tv.ref().setBackground(bg);       // the raw View
+}));
+```
+
+---
+
+## Using an existing instance
+
+If the widget is already constructed, just hand it over:
+
+```java
+TextView title = new TextView(this);
+title.setText("An existing TextView");
+
+setContentView(build(linear(root -> {
+    root.view(title);
+})));
+```
+
+Or pass only the `Class` and let the framework create it:
+
+```java
+setContentView(build(linear(root -> {
+    root.view(TextView.class);
+})));
+```
+
+> Both forms give the configurator generic properties only (size, margins, background, listeners…). For widget-specific properties use `text(...)`, `linear(...)` and friends.
+
+---
+
+## Full example
+
+A scrollable page:
+
+```java
+public class MainActivity extends AppCompatActivity implements HDSL {
+
+    @Override
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+
+        setContentView(build(scroll(root -> {
+            root.fillViewport();
+
+            root.layout(linear(page -> {
+                page.vertical()
+                    .paddingDp(24);
+
+                page.view(text(tv -> {
+                    tv.text("My page")
+                      .textSizeDp(28)
+                      .textColor(0xFF1A1C1E);
+                }));
+
+                page.view(text(tv -> {
+                    tv.text("Body text goes here.")
+                      .textSizeDp(16)
+                      .marginTopDp(8)
+                      .textColor(0xFF44474E);
+                }));
+
+                page.layout(frame(card -> {
+                    card.paddingDp(16)
+                        .marginTopDp(16)
+                        .backgroundColor(0xFFE8F0FE);
+
+                    card.view(text(tv -> {
+                        tv.text("Card content")
+                          .textSizeDp(16);
+                    }));
+                }));
+
+                page.view(text(button -> {
+                    button.text("Button")
+                          .textSizeDp(16)
+                          .paddingDp(12, 8, 12, 8)
+                          .marginTopDp(16)
+                          .textColor(0xFFFFFFFF)
+                          .backgroundColor(0xFF3D5A80)
+                          .onClick(v -> Toast.makeText(this, "Tapped", Toast.LENGTH_SHORT).show());
+                }));
+            }));
+        })));
+    }
+}
+```
+
+---
 
 > Were it not for those typical statically-scanning IDEs, the generics could be written all the more elegantly.
-
----
-
-## Adding Children
-
-All 5 `addView` overloads accept three origins. The element takes the first slot, the remaining parameters match the native signature:
-
-```java
-// element
-root.view(text(tv -> {...}));                      // addView(Element)
-
-// instance
-root.view(new TextView(this));                     // addView(View)
-root.view(new TextView(this), tv -> {...});        // addView(View, Method)
-
-// class
-root.view(TextView.class);                         // addView(Class)
-root.view(TextView.class, tv -> {...});            // addView(Class, Method)
-
-// extra parameters
-root.view(text(tv -> {...}), 0);                   // addView(Element, int)
-root.view(text(tv -> {...}), params);              // addView(Element, LayoutParams)
-root.view(text(tv -> {...}), 0, params);           // addView(Element, int, LayoutParams)
-root.view(text(tv -> {...}), -2, 32);              // addView(Element, int, int)
-```
-
-Use `layout(...)` for layouts and `view(...)` for widgets; nest them without limit:
-
-```java
-root.layout(linear(box -> {
-    box.view(text(tv -> {...}));
-    box.layout(frame(f -> {
-        f.view(text(tv -> {...}), new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
-    }));
-}));
-```
-
----
-
-## Configuring Properties
-
-Property methods live on the reference object, chainable and self-returning:
-
-```java
-root.view(edit(e -> {
-    e.size(-1, -2).paddingDp(14, 10, 14, 10)
-     .hint("Enter a nickname").maxLength(10)
-     .inputType(InputType.TYPE_CLASS_TEXT);
-}));
-
-root.view(seek(sb -> {
-    sb.size(-1, -2).max(100).progress(50)
-      .thumbTint(getColor(R.color.md_primary))
-      .onSeekBarChange(listener);
-}));
-```
-
-Unit rules: every **length** (size / margin / padding / elevation / max width & height) comes in both `xxx()` pixels and `xxxDp()` variants; `textSize()` follows the native semantics (SP), with `textSizeDp` and `textSizePx` alongside it.
-
----
-
-## Elements at a Glance
-
-```java
-// widgets
-view  text  button  edit  image  progress  check  radio  switch_button
-space  seek  rating  spinner  chrono  web  list  grid_view  search
-
-// layouts
-linear  frame  relative  scroll  hscroll  grid
-radio_group  table  table_row  switcher
-```
 
 ---
 
 ## License
 
 MIT License
-
----
 
 ## Contact
 

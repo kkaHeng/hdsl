@@ -43,7 +43,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.kkaHeng'
                 artifactId = 'hdsl'
-                version = project.findProperty('version.name') ?: '26.9.1'
+                version = project.findProperty('version.name') ?: '26.10.1'
             }
         }
     }

@@ -8,208 +8,282 @@
 
 ---
 
-用 **Java 代码**构建 Android UI 的 DSL 框架。零 XML、链式 API、类型安全，布局结构直接从代码里长出来。
+用 **Java 代码**写 Android 界面，不用 XML。
 
 使用前提：**Java 8**。
 
 ---
 
-## 引入依赖
+## 安装
 
-在 **settings.gradle** 里声明 JitPack 仓库：
+### 1. 添加仓库
 
-```groovy
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+打开项目根目录的 `settings.gradle`，在 `repositories` 里加一行：
 
+```gradle
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }   // ← 加这一行
+        maven { url 'https://jitpack.io' }   // 加这一行
     }
 }
 ```
 
-仓库也可以写在根目录 **build.gradle** 的 `allprojects` 里：
+### 2. 添加依赖
 
-```groovy
-allprojects {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
+**方式一**：直接写坐标，加在模块的 `build.gradle`：
 
-然后在模块的 **build.gradle** 里添加依赖：
-
-```groovy
+```gradle
 dependencies {
-    implementation 'com.github.kkaHeng:hdsl:26.9.1'
+    implementation 'com.github.kkaHeng:hdsl:26.10.1'
 }
 ```
 
-> Kotlin DSL（`settings.gradle.kts`）写法为 `maven("https://jitpack.io")`。
-> 版本号以顶部徽章为准，或查看 [JitPack](https://jitpack.io/#kkaHeng/hdsl)。
+**方式二**：用版本目录（`gradle/libs.versions.toml`），与方式一二选一。
+
+先登记：
+
+```toml
+[versions]
+hdsl = "26.10.1"
+
+[libraries]
+hdsl = { group = "com.github.kkaHeng", name = "hdsl", version.ref = "hdsl" }
+```
+
+再在模块的 `build.gradle` 里引用：
+
+```gradle
+dependencies {
+    implementation libs.hdsl
+}
+```
+
+版本号看顶部徽章，或[这里](https://jitpack.io/#kkaHeng/hdsl)。
 
 ---
 
-## 构建 UI 的方式
+## 第一个界面
 
-### 一、来源方法：创建带上配置，一次给全
-
-方法名就是控件名。第一个参数永远是配置器，里面拿到的就是该控件的引用，属性直接往上写。
+新建 Activity，实现 `HDSL`，在 `onCreate` 里写：
 
 ```java
-@Override
-protected void onCreate(Bundle bundle) {
-    super.onCreate(bundle);
-    setContentView(build(scroll(root -> {
-        root.size(-1, -1).fillViewport();
+public class MainActivity extends AppCompatActivity implements HDSL {
 
-        root.layout(linear(box -> {
-            box.paddingDp(16).vertical();
+    @Override
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
 
-            box.view(text(tv -> {
-                tv.text("你好，世界").textSizeDp(16);
-            }));
-        }));
-    })));
+        setContentView(build(text(tv -> {
+            tv.text("你好，世界")
+              .textSizeDp(24);
+        })));
+    }
 }
 ```
 
-每个来源方法都有三种创建来源：
+`build(...)` 返回创建好的 View，直接交给 `setContentView`。
+
+---
+
+## 放多个控件
+
+用 `linear(...)` 建一个竖排布局，再往里加子控件：
 
 ```java
-text(tv -> {...})                        // 默认构造
-text(new TextView(this), tv -> {...})    // 给定实例
-text(TextView.class, tv -> {...})        // 反射构造
-```
+setContentView(build(linear(root -> {
+    root.vertical()
+        .paddingDp(24);
 
-### 二、实例版与 Class 版
+    root.view(text(tv -> {
+        tv.text("标题")
+          .textSizeDp(24);
+    }));
 
-入口同样吃三种来源。实例 / 类来源的配置器只有通用能力：`build` 与 `view` 给到 `RefView`，`layout` 给到 `RefLayout`。想要控件专属属性，就让来源方法吃下实例或类。
-
-```java
-// 来源方法
-setContentView(build(scroll(root -> {...})));
-
-// 实例 + 配置
-setContentView(build(new LinearLayout(this), root -> {
-    root.paddingDp(16);
-}));
-
-// 专属属性：来源方法吃下实例
-setContentView(build(linear(new LinearLayout(this), root -> {
-    root.view(new TextView(this));
+    root.view(text(tv -> {
+        tv.text("这是一行正文。")
+          .textSizeDp(16);
+    }));
 })));
-
-// 类 + 配置
-setContentView(build(LinearLayout.class, root -> {
-    root.paddingDp(16);
-}));
 ```
 
-### 三、混用与 ref() 逃逸
+`root.view(...)` 添加控件，`root.layout(...)` 添加布局。
 
-三种来源任意混搭。任何时刻用 `ref()` 拿到原始 View，原生 API 随便调。
+---
+
+## 嵌套布局
+
+布局可以继续往里套：
 
 ```java
-build(linear(root -> {
-    root.layout(frame(new MaterialCardView(this), card -> {
-        card.ref().setRadius(card.dp2px(16f));  // 原生方法
-        card.elevationDp(1);                    // 属性挂在引用上
+root.layout(linear(row -> {
+    row.horizontal();
+
+    row.view(text(tv -> {
+        tv.text("左");
+    }));
+
+    row.view(text(tv -> {
+        tv.text("右");
     }));
 }));
 ```
+
+---
+
+## 设置属性
+
+配置器里拿到的就是该控件的引用，属性直接写在它上面：
+
+```java
+root.view(text(tv -> {
+    tv.text("提交")
+      .textSizeDp(16)
+      .paddingDp(12, 8, 12, 8)
+      .marginTopDp(16)
+      .textColor(0xFFFFFFFF)
+      .backgroundColor(0xFF3D5A80);
+}));
+```
+
+尺寸都有像素与 DP 两套写法：
+
+```java
+padding(12)      paddingDp(12)
+size(48)         sizeDp(48)
+margin(8)        marginDp(8)
+```
+
+`textSize` 默认按 SP 计算，另有 `textSizeDp`、`textSizePx`。
+
+---
+
+## 处理交互
+
+监听器写在属性链里：
+
+```java
+root.view(text(tv -> {
+    tv.text("点我")
+      .paddingDp(12, 8, 12, 8)
+      .onClick(v -> Toast.makeText(this, "点到了", Toast.LENGTH_SHORT).show());
+}));
+```
+
+---
+
+## 拿到原生控件
+
+需要原生方法时，用 `ref()`：
+
+```java
+root.view(text(tv -> {
+    tv.text("圆角背景")
+      .paddingDp(12);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFFE8F0FE);
+    bg.setCornerRadius(tv.dp2px(12)); // dp 转像素
+
+    tv.ref().setBackground(bg);       // 原生 View
+}));
+```
+
+---
+
+## 使用已有实例
+
+控件已经 new 好了，可以直接传进去：
+
+```java
+TextView title = new TextView(this);
+title.setText("现成的 TextView");
+
+setContentView(build(linear(root -> {
+    root.view(title);
+})));
+```
+
+也可以只传 `Class`，由框架创建：
+
+```java
+setContentView(build(linear(root -> {
+    root.view(TextView.class);
+})));
+```
+
+> 这两种写法的配置器只能设通用属性（尺寸、边距、背景、监听等）。控件专属属性请用 `text(...)`、`linear(...)` 这类方法。
+
+---
+
+## 完整示例
+
+一个可滚动的页面：
+
+```java
+public class MainActivity extends AppCompatActivity implements HDSL {
+
+    @Override
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+
+        setContentView(build(scroll(root -> {
+            root.fillViewport();
+
+            root.layout(linear(page -> {
+                page.vertical()
+                    .paddingDp(24);
+
+                page.view(text(tv -> {
+                    tv.text("我的页面")
+                      .textSizeDp(28)
+                      .textColor(0xFF1A1C1E);
+                }));
+
+                page.view(text(tv -> {
+                    tv.text("这里是正文。")
+                      .textSizeDp(16)
+                      .marginTopDp(8)
+                      .textColor(0xFF44474E);
+                }));
+
+                page.layout(frame(card -> {
+                    card.paddingDp(16)
+                        .marginTopDp(16)
+                        .backgroundColor(0xFFE8F0FE);
+
+                    card.view(text(tv -> {
+                        tv.text("卡片内容")
+                          .textSizeDp(16);
+                    }));
+                }));
+
+                page.view(text(button -> {
+                    button.text("按钮")
+                          .textSizeDp(16)
+                          .paddingDp(12, 8, 12, 8)
+                          .marginTopDp(16)
+                          .textColor(0xFFFFFFFF)
+                          .backgroundColor(0xFF3D5A80)
+                          .onClick(v -> Toast.makeText(this, "点到了", Toast.LENGTH_SHORT).show());
+                }));
+            }));
+        })));
+    }
+}
+```
+
+---
 
 > 要不是那些典型的静态扫描 IDE，泛型这套东西本可以写得更优雅。
-
----
-
-## 添加子控件
-
-5 种 `addView` 重载，每种都有三种来源。构件（Element）占第一位，其余参数与原生一致：
-
-```java
-// 构件
-root.view(text(tv -> {...}));                      // addView(Element)
-
-// 实例
-root.view(new TextView(this));                     // addView(View)
-root.view(new TextView(this), tv -> {...});        // addView(View, Method)
-
-// 类
-root.view(TextView.class);                         // addView(Class)
-root.view(TextView.class, tv -> {...});            // addView(Class, Method)
-
-// 附加参数
-root.view(text(tv -> {...}), 0);                   // addView(Element, int)
-root.view(text(tv -> {...}), params);              // addView(Element, LayoutParams)
-root.view(text(tv -> {...}), 0, params);           // addView(Element, int, LayoutParams)
-root.view(text(tv -> {...}), -2, 32);              // addView(Element, int, int)
-```
-
-布局用 `layout(...)`，控件用 `view(...)`，可无限嵌套：
-
-```java
-root.layout(linear(box -> {
-    box.view(text(tv -> {...}));
-    box.layout(frame(f -> {
-        f.view(text(tv -> {...}), new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
-    }));
-}));
-```
-
----
-
-## 配置属性
-
-属性方法全部挂在引用对象上，链式调用、返回自身：
-
-```java
-root.view(edit(e -> {
-    e.size(-1, -2).paddingDp(14, 10, 14, 10)
-     .hint("请输入昵称").maxLength(10)
-     .inputType(InputType.TYPE_CLASS_TEXT);
-}));
-
-root.view(seek(sb -> {
-    sb.size(-1, -2).max(100).progress(50)
-      .thumbTint(getColor(R.color.md_primary))
-      .onSeekBarChange(listener);
-}));
-```
-
-单位规则：**长度量**（尺寸 / 边距 / 内边距 / 阴影 / 最大宽高）都有 `xxx()` 像素与 `xxxDp()` 双版本；`textSize()` 遵循原生语义（SP），另有 `textSizeDp` 与 `textSizePx`。
-
----
-
-## 构件一览
-
-```java
-// 控件
-view  text  button  edit  image  progress  check  radio  switch_button
-space  seek  rating  spinner  chrono  web  list  grid_view  search
-
-// 布局
-linear  frame  relative  scroll  hscroll  grid
-radio_group  table  table_row  switcher
-```
 
 ---
 
 ## 许可证
 
 MIT License
-
----
 
 ## 联系方式
 
